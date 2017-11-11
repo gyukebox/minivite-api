@@ -1,0 +1,15 @@
+{
+  "body": {
+    "pollTitle": "오늘 점심 뭐 먹지?",
+    "choices": [
+      {
+        "name": "돈까스",
+        "selected": true
+      },
+      {
+        "name": "치킨",
+        "selected": false
+      }
+    ]
+  }
+}
