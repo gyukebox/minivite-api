@@ -78,10 +78,10 @@ WSGI_APPLICATION = 'api.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'minivote_db',
-        'USER': 'root',
-        'PASSWORD': 'biss9541',
-        'HOST': '127.0.0.1',
+        'NAME': 'heroku_dd91c2d0a471d9',
+        'USER': 'b95d9116fe508e',
+        'PASSWORD': 'b8369b27',
+        'HOST': 'mysql://b95d9116fe508e:b8369b27@us-cdbr-iron-east-05.cleardb.net/heroku_dd91c2d0a471d95',
         'PORT': '3306'
     }
 }
