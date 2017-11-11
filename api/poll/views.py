@@ -3,6 +3,10 @@ from django.http import HttpResponse
 from .models import *
 
 
+def poll_create(request):
+    return HttpResponse(status=200)
+
+
 def poll_update(request):
     """
     투표 결과 실시간 반영 뷰 함수
@@ -15,4 +19,8 @@ def poll_update(request):
     for list in selection_lists:
         pass
 
+    return HttpResponse(status=200)
+
+
+def get_poll_result(request):
     return HttpResponse(status=200)
