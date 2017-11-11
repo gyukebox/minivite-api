@@ -2,14 +2,14 @@ from django.db import models
 
 
 # Create your models here.
-class SelectionModel(models.Model):
-    body = models.CharField(max_length=50)
-    is_selected = models.BooleanField(default=False)
-
-
 class PollModel(models.Model):
     title = models.CharField(max_length=100)
-    selections = models.ForeignKey(SelectionModel, on_delete=models.CASCADE)
+
+
+class SelectionModel(models.Model):
+    poll = models.ForeignKey(PollModel, on_delete=models.CASCADE, default=None)
+    body = models.CharField(max_length=50)
+    count = models.IntegerField(default=0)
 
 
 class ResultModel(models.Model):
