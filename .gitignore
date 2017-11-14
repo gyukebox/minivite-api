@@ -104,6 +104,8 @@ ENV/
 .idea/
 .vscode/
 
-# others
+# configuration files
 remotedb.txt
+
+# django migrations
 api/poll/migrations/
