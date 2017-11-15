@@ -40,4 +40,28 @@ def poll_update(request):
 
 
 def get_poll_result(request):
-    return HttpResponse(status=200)
+    poll_info = request.body.decode('utf-8')
+    # poll_info = '{"Body": {"Title": "lunch"}}'
+    print(poll_info)
+
+    if not poll_info:
+        print("result request is null")
+        return HttpResponse(status=400)
+
+    title_json = json.loads(poll_info, encoding='utf8')
+    print(title_json)
+
+    title = title_json["Body"]["Title"]
+    print(title)
+
+    getPollModel = PollModel.objects.filter(title=title)[0]
+    print(title, getPollModel.title)
+
+    outValues = SelectionModel.objects.filter(poll=getPollModel).values('body', 'num_people')
+    print(outValues)
+
+    ret = { "body" : { "pollTitle" : getPollModel.title, "result" : list(outValues) } }
+    print(ret)
+
+    return JsonResponse(ret, json_dumps_params = {'ensure_ascii': True})
+
