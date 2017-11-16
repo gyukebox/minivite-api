@@ -2,25 +2,25 @@ import json
 from django.http import HttpResponse, JsonResponse
 from .models import *
 
+
 def poll_create(request):
-    poll_creInfo = request.body.decode("utf-8"))
-    poll_info = json.loads(poll_creInfo,encoding='utf8')
+    poll_cre_info = request.body.decode("utf-8")
+    poll_info = json.loads(poll_cre_info, encoding='utf8')
+
     try:
-        new_PollModel = PollModel()
-        new_PollModel.title = poll_info['Title']
-        new_PollModel.save()
+        new_poll_model = PollModel()
+        new_poll_model.title = poll_info['Title']
+        new_poll_model.save()
 
         for choice in poll_info['Choices']:
-            newSelectionModel = SelectionModel()
-            newSelectionModel.poll = new_PollModel
-            newSelectionModel.body = choice
-            newSelectionModel.save()
+            new_selection_model = SelectionModel()
+            new_selection_model.poll = new_poll_model
+            new_selection_model.body = choice
+            new_selection_model.save()
     except Exception as e:
         print(e)
         return HttpResponse(status=500)
-    return HttpResponse(status=200)
 
-def poll_create(request):
     return HttpResponse(status=200)
 
 
@@ -71,14 +71,14 @@ def get_poll_result(request):
     title = title_json["Body"]["Title"]
     print(title)
 
-    getPollModel = PollModel.objects.filter(title=title)[0]
-    print(title, getPollModel.title)
+    get_poll_model = PollModel.objects.filter(title=title)[0]
+    print(title, get_poll_model.title)
 
-    outValues = SelectionModel.objects.filter(poll=getPollModel).values('body', 'num_people')
-    print(outValues)
+    out_values = SelectionModel.objects.filter(poll=get_poll_model).values('body', 'num_people')
+    print(out_values)
 
-    ret = { "body" : { "pollTitle" : getPollModel.title, "result" : list(outValues) } }
+    ret = {"body": {"pollTitle": get_poll_model.title, "result": list(out_values)}}
     print(ret)
 
-    return JsonResponse(ret, json_dumps_params = {'ensure_ascii': True})
+    return JsonResponse(ret, json_dumps_params={'ensure_ascii': True})
 
