@@ -17,7 +17,7 @@ from django.conf.urls import url
 from . import views
 
 urlpatterns = [
-    url(r'^make', views.poll_update, name='create'),
-    url(r'^update', views.poll_update, name='create'),
+    url(r'^make/',views.poll_create, name = 'index'),
+    url(r'^update', views.poll_update, name='update'),
     url(r'^result', views.get_poll_result, name='result'),
 ]
