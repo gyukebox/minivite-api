@@ -17,4 +17,11 @@ class CreatePollTests(TestCase):
 
 
 class UpdatePollTests(TestCase):
-    pass
+    """
+    Updating polls test
+    """
+    def test_is_increased(self):
+        pass
+
+    def test_is_decreased(self):
+        pass
