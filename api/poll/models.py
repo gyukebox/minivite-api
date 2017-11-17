@@ -9,7 +9,7 @@ class PollModel(models.Model):
 
 
 class SelectionModel(models.Model):
-    poll = models.ForeignKey(PollModel, on_delete=models.CASCADE, default=None)
+    poll = models.ForeignKey(PollModel, related_name='selections', on_delete=models.CASCADE, default=None)
     body = models.CharField(max_length=50)
     num_people = models.IntegerField(default=0)
 

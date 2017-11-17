@@ -1,2 +1,3 @@
-# minivite-api
+# Minivote API
 api server for minivote
+

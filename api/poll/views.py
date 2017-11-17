@@ -1,84 +1,133 @@
-import json
-from django.http import HttpResponse, JsonResponse
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from .serializers import *
 from .models import *
 
 
-def poll_create(request):
-    poll_cre_info = request.body.decode("utf-8")
-    poll_info = json.loads(poll_cre_info, encoding='utf8')
-
-    try:
-        new_poll_model = PollModel()
-        new_poll_model.title = poll_info['Title']
-        new_poll_model.save()
-
-        for choice in poll_info['Choices']:
-            new_selection_model = SelectionModel()
-            new_selection_model.poll = new_poll_model
-            new_selection_model.body = choice
-            new_selection_model.save()
-    except Exception as e:
-        print(e)
-        return HttpResponse(status=500)
-
-    return HttpResponse(status=200)
-
-
-def poll_update(request):
+class IndexView(APIView):
     """
-    투표 결과 실시간 반영 뷰 함수
-    :param request: JSON 형식의 업데이트 내역
-    :return: 성공 시 http 200, 실패 시 원인에 따라 400 호은 500
+    View class for index page
     """
-    query = request.body.decode('utf-8')
+    @staticmethod
+    def get(request, format=None):
+        """
+        GET method. Lists all created polls
+        :param request: Http request
+        :param format: Either json or html. Returns response as given format. Default is json.
+        :return: JSON data of all polls.
+        """
+        polls = PollModel.objects.all()
+        serializer = PollListSerializer(polls, many=True)
+        return Response(serializer.data)
 
-    if request.method == 'POST':
+
+class CreateView(APIView):
+    """
+    View class for creating poll
+    """
+    @staticmethod
+    def post(request, format=None):
+        """
+        POST method. Creates a new poll by given request. Returns http response as type application/json
+        :param request: JSON containing poll title and selections
+        :param format: Either json or html. Returns response as given format. Default is json.
+        :return: http 201 if created successfully, 400 if creation failed.
+        """
+        body = request.data
+
         try:
-            to_update = json.loads(query, encoding='utf8')
-            poll = PollModel.objects.get(title=to_update['pollTitle'])
+            poll = PollModel(title=body['title'])
+            poll.save()
+        except KeyError:
+            response = dict(error='KeyError')
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
-            for choice in to_update['choices']:
-                selection = SelectionModel.objects.filter(poll_id=poll.id).filter(body=choice['name']).get()
+        response = dict(poll=body['title'], selections=list(), count=0)
 
+        try:
+            for choice in body['choices']:
+                selection = SelectionModel(poll=poll, body=choice)
+                selection.save()
+                response['selections'].append(choice)
+                response['count'] += 1
+            return Response(response, status=status.HTTP_201_CREATED)
+
+        except KeyError:
+            response = dict(error='KeyError')
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UpdateView(APIView):
+    """
+    View class for updating poll
+    """
+    @staticmethod
+    def post(request, format=None):
+        """
+        POST method. Updates poll status and returns http response as type application/json
+        :param request: JSON data, including poll title and to-be-modified selections
+        :param format: Either json or html. Returns response as given format. Default is json.
+        :return: Http 202 if valid, Http 400 if invalid request.
+        """
+        body = request.data
+        try:
+            poll = PollModel.objects.get(title=body['poll'])
+        except PollModel.DoesNotExist:
+            response = dict(error='Poll does not exist')
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+        response = dict(poll=body['poll'], updated=list())
+
+        try:
+            for choice in body['choices']:
+                selection = SelectionModel.objects.filter(poll=poll).filter(body=choice['name']).get()
                 if choice['selected'] is True:
                     selection.num_people += 1
-                else:
-                    if selection.num_people > 0:
-                        selection.num_people -= 1
+                    response['updated'].append({'name': choice['name'], 'update': 'increased'})
+                elif selection.num_people > 0:
+                    selection.num_people -= 1
+                    response['updated'].append({'name': choice['name'], 'update': 'decreased'})
                 selection.save()
+            return Response(response, status=status.HTTP_202_ACCEPTED)
 
-            # TODO make as JSON Response
-            return HttpResponse(status=200)
+        except SelectionModel.DoesNotExist:
+            response = dict(error='Selection does not exist')
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ResultView(APIView):
+    """
+    View class for returning poll result
+    """
+    @staticmethod
+    def get(request, format=None):
+        """
+        Returns result of all poll
+        :param request: http request
+        :param format: Either json or html. Returns response as given format. Default is json.
+        :return: JSON data, containing result of all polls
+        """
+        polls = PollModel.objects.all()
+        serializer = PollSerializer(polls, many=True)
+        return Response(serializer.data)
+
+    @staticmethod
+    def post(request, format=None):
+        """
+        Returns result of given poll title
+        :param request: JSON data, including poll title
+        :param format: Either json or html. Returns response as given format. Default is json.
+        :return: JSON data, containing result of given poll
+        """
+        print(request.data)
+        try:
+            poll = PollModel.objects.get(title=request.data['title'])
+            serializer = PollSerializer(instance=poll)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
             print(e)
-            return HttpResponse(status=500)
-    else:
-        return HttpResponse(status=400)
-
-
-def get_poll_result(request):
-    poll_info = request.body.decode('utf-8')
-    # poll_info = '{"Body": {"Title": "lunch"}}'
-    print(poll_info)
-
-    if not poll_info:
-        print("result request is null")
-        return HttpResponse(status=400)
-
-    title_json = json.loads(poll_info, encoding='utf8')
-    print(title_json)
-
-    title = title_json["Body"]["Title"]
-    print(title)
-
-    get_poll_model = PollModel.objects.filter(title=title)[0]
-    print(title, get_poll_model.title)
-
-    out_values = SelectionModel.objects.filter(poll=get_poll_model).values('body', 'num_people')
-    print(out_values)
-
-    ret = {"body": {"pollTitle": get_poll_model.title, "result": list(out_values)}}
-    print(ret)
-
-    return JsonResponse(ret, json_dumps_params={'ensure_ascii': True})
-
+            serializer = PollSerializer(data=request.data)
+            serializer.is_valid()
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
